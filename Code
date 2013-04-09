@@ -1,0 +1,157 @@
+# -*- coding: utf-8 -*-
+from random import random
+import time
+
+
+
+#Events in the game
+class Event(object):
+    '''A game event, including the probability of its happening.'''
+
+    def __init__(self, probability, message, healthChange, maxOccur=100000):
+        self.probability = probability
+        self.message = message
+        self.healthChange = healthChange
+        self.remainingOccur = maxOccur
+
+    def process(self):
+        '''Process the event, and return the change in health, or 0.'''
+
+        if self.remainingOccur and random() < self.probability:
+            self.remainingOccur -= 1
+            print(self.message)
+            return self.healthChange
+        return 0
+
+#Places in the game
+class Place(object):
+    '''A place in the game, with a title, description, and events that can occur there.'''
+
+    def __init__(self, title, description, events):
+        '''events is a sequence of Event objects.'''
+        self.title = title
+        self.description = description
+        self.events = events
+
+#Main Game Code
+class Game(object):
+    '''The main code for running the game.'''
+
+    def __init__(self):
+        self.health = 100
+
+    def play(self):
+        print(self.introduction)
+
+        while True:
+            print
+            print(self.location.description)
+
+            for event in self.location.events:
+                self.health += event.process()
+                if self.health <= 0:
+                    print("GAME OVER")
+                    exit(1)
+
+            print('Health: %d' % self.health)
+            self._transition()
+
+    def _transition(self):
+        transitions = self.location.transitions
+        print('You can go to these places:')
+        for (index, transition) in enumerate(transitions):
+            print(index + 1, transition.title)
+
+        choice = int(input('Choose one, or 0 to exit: '))
+        if choice == 0:
+            exit(0)
+        else:
+            self.location = transitions[choice - 1]
+#Introduction Monologue
+intro ='''          -----------------
+         |Survive The Night|
+          -----------------'''
+         
+#Menu While Loop
+i=0
+
+while i == 0:
+    print intro
+    print ""
+    time.sleep(3)
+    player = raw_input ("Do you wish to continue? Y/N \n")
+    if player == "y":
+        i = i + 1
+#Player Information (Player/Clan name gathering)
+i=1
+global name
+global clan
+name = []
+clan = []
+while i == 1:
+    player = []
+    #Name
+    name = raw_input('''Do you remember your name?
+
+Player Name: ''') 
+    time.sleep(1)
+    print ""
+    #armyName
+    print "Right.. your name is " + name + ", that makes sense."
+    print ""
+    time.sleep(1)
+    print "Can you remember where you are?"
+    print ""
+    time.sleep(1)
+    clan = raw_input("Player Location: ")
+    time.sleep(1)
+    print ""
+    print "Ah yes, " + clan + "!"
+    time.sleep(1)
+    print ""
+    player = raw_input ("Do you wish to continue? Y/N \n")
+    if player =="y":
+        i = i + 1
+time.sleep(2)
+print '''Health = 100
+
+Inventory:
+
+    Pain Killers = 0
+    Med Kit = 0
+    Gun = No
+    Ammo = 0'''
+time.sleep(3)
+#Code that runs the game
+class STN(Game):
+    def __init__(self):
+        super(STN, self).__init__()
+        self.introduction = intro[0]
+
+        downtown = Place('Downtown',
+            "- You are Downtown looking around.",
+            (
+            Event(1, '- A zombie jumps out and bites you. -50', -50, maxOccur = 1),
+            Event(1, "- You find some pain killers. +30", 30),
+            ))
+
+        businessCenter = Place('Business Center', "- You are at the Business Center.", ())
+
+        car = Place('Car', '- You have entered your car.', (
+            Event(0.5, "- There's static on the radio.", 0),
+        ))
+
+        housingTrack = Place('Housing Track', 'Welcome to Sunny Gardens.', (
+            Event(1, '- You find a med kit.', 10),
+        ))
+
+        downtown.transitions = (businessCenter, car)
+        businessCenter.transitions = (downtown,)
+        car.transitions = (downtown,housingTrack)
+        housingTrack.transitions = (car,)
+
+        self.location = downtown
+
+game = STN()
+game.play()
+
